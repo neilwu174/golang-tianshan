@@ -1,0 +1,19 @@
+{{template "main" .}}
+{{define "content"}}
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-12">
+            <ul>
+            {{ range . }}
+              {{if .Directory}}
+                <li><a href="{{ .Name }}">Directory - {{ .Name }}</a></li>
+              {{else}}
+                <li><a href="{{ .Name }}">File - {{ .Name }}</a></li>
+              {{end}}
+            {{ end }}
+          </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
