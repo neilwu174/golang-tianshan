@@ -5,11 +5,15 @@
       <div class="col-sm-12">
             <ul>
             {{ range . }}
+            {{if .Parent}}
+              <li><img src="/static/img/back.gif" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
+            {{else}}
               {{if .Directory}}
-                <li><a href="{{ .Name }}">Directory - {{ .Name }}</a></li>
-              {{else}}
-                <li><a href="{{ .Name }}">File - {{ .Name }}</a></li>
-              {{end}}
+                  <li><img src="/static/img/folder.gif" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
+                {{else}}
+                  <li><img src="/static/img/text.gif" alt="[   ]"><a href="{{ .Link }}">{{ .Name }}</a></li>
+                {{end}}
+              {{ end }}
             {{ end }}
           </ul>
       </div>

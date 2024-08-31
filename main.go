@@ -8,6 +8,11 @@ import (
 	"net/http"
 
 	"github.com/neilwu174/calculator/internal/handler"
+
+	"context"
+	"fmt"
+	"regexp"
+	"strings"
 )
 
 const (
@@ -53,43 +58,6 @@ func LoadTemplates() error {
 	return nil
 }
 
-func initStatic(mux *http.ServeMux) {
-	dir := http.Dir("./")
-	fs := http.FileServer(dir)
-	mux.Handle("/static/", fs)
-}
-
-// func initRoot(mux *http.ServeMux) {
-// 	dir := http.Dir("/Users")
-// 	fs := http.FileServer(dir)
-// 	mux.Handle("/fileSystem/", http.StripPrefix("/fileSystem", neuter(fs)))
-// }
-
-func neuter(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// log.Println(r.URL.Path)
-		// status, err := os.Stat(r.URL.Path)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// if status.IsDir() {
-		// 	log.Println(r.URL.Path, " is a Dir")
-		// } else {
-		// 	log.Println(r.URL.Path, " is a File")
-		// }
-		// entries, err := os.ReadDir("./")
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-
-		// for _, e := range entries {
-		// 	w.Write([]byte("http://localhost:8080/fileSystem" + r.URL.Path + e.Name()))
-		// }
-		// next.ServeHTTP(w, r)
-		handler.GetFileSystem(getTemplate(html_filesystem), w, r)
-	})
-}
-
 func getTemplate(name string) *template.Template {
 	t, ok := templates[name]
 	if !ok {
@@ -126,23 +94,84 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 301)
 }
 
-func main00aa() {
-	err := LoadTemplates()
-	if err != nil {
-		log.Fatal(err)
-	}
-	r := http.NewServeMux()
-	log.Println("Creating route...")
-	r.HandleFunc("/home", Index)
-	r.HandleFunc("/user", User)
-	r.HandleFunc("/explorer", Explorer)
-	r.HandleFunc("/explorer/env", Env)
-	r.HandleFunc("/explorer/files", redirect)
-	r.HandleFunc("/filesystem/{?}", FileSystem)
-	initStatic(r)
-	// initRoot(r)
+var routes = []route{
+	newRoute("GET", "/", home),
+	newRoute("GET", "/xyz/(.*)", sink),
+	newRoute("GET", "/groups/([^/]+)/people", peopleInGroupHandler),
+	newRoute("GET", "/filesystem/(.*)", FileSystem),
+	newRoute("GET", "/filesystem", FileSystem),
+	newRoute("GET", "/home", Index),
+	newRoute("GET", "/explorer", Explorer),
+	newRoute("GET", "/explorer/env", Env),
+}
 
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Println(err)
+func getRouts() []route {
+	dir := http.Dir("./")
+	fs := http.FileServer(dir)
+	var routes = append(routes, newRoute("GET", "/static/(.*)", fs.ServeHTTP))
+	return routes
+}
+
+func newRoute(method, pattern string, handler http.HandlerFunc) route {
+	return route{method, regexp.MustCompile("^" + pattern + "$"), handler}
+}
+
+type route struct {
+	method  string
+	regex   *regexp.Regexp
+	handler http.HandlerFunc
+}
+
+func Serve(w http.ResponseWriter, r *http.Request) {
+	var allow []string
+	for _, route := range getRouts() {
+		matches := route.regex.FindStringSubmatch(r.URL.Path)
+		fmt.Println("matches=", matches)
+		if len(matches) > 0 {
+			if r.Method != route.method {
+				allow = append(allow, route.method)
+				continue
+			}
+			ctx := context.WithValue(r.Context(), ctxKey{}, matches[1:])
+			fmt.Println("route=", route.handler)
+			route.handler(w, r.WithContext(ctx))
+			return
+		}
 	}
+	if len(allow) > 0 {
+		w.Header().Set("Allow", strings.Join(allow, ", "))
+		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	http.NotFound(w, r)
+}
+
+type ctxKey struct{}
+
+func getField(r *http.Request, index int) string {
+	fields := r.Context().Value(ctxKey{}).([]string)
+	return fields[index]
+}
+
+func home(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "HOME\n")
+}
+func peopleInGroupHandler(w http.ResponseWriter, r *http.Request) {
+	slug := getField(r, 0)
+	fmt.Fprintf(w, "Group handler: %s\n", slug)
+}
+
+func fileSystemHandler(w http.ResponseWriter, r *http.Request) {
+	slug := getField(r, 0)
+	fmt.Fprintf(w, "File System handler: %s\n", slug)
+}
+
+func sink(w http.ResponseWriter, r *http.Request) {
+	slug := getField(r, 0)
+	fmt.Fprintf(w, "Sink %s\n", slug)
+}
+
+func main() {
+	LoadTemplates()
+	http.ListenAndServe("127.0.0.1:8080", http.HandlerFunc(Serve))
 }

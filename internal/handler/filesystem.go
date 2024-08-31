@@ -5,10 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 type FileSystemData struct {
 	Directory bool
+	Parent    bool
+	Link      string
 	Name      string
 }
 
@@ -28,6 +31,8 @@ func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Re
 }
 
 func getDirectory(directory string) []FileSystemData {
+	var parentDir = filepath.Dir(directory)
+	log.Println("parentDir=", parentDir)
 	status, err := os.Stat(directory)
 	if err != nil {
 		panic(err)
@@ -41,11 +46,16 @@ func getDirectory(directory string) []FileSystemData {
 	if err != nil {
 		log.Fatal(err)
 	}
-	items := make([]FileSystemData, len(entries))
+	items := make([]FileSystemData, len(entries)+1)
+	items[0] = FileSystemData{Directory: true, Parent: true, Link: "/filesystem" + parentDir, Name: parentDir}
 	for i, s := range entries {
 		log.Println("entry=", i, s.Name())
-		items[i].Directory = s.IsDir()
-		items[i].Name = "/filesystem" + directory + "/" + s.Name()
+		items[i+1].Directory = s.IsDir()
+		// items[i].Name = "/filesystem" + directory + "/" + s.Name()
+		items[i+1].Link = "/filesystem" + directory + "/" + s.Name()
+		items[i+1].Name = s.Name()
+		items[i+1].Parent = false
 	}
+	// items = append(items, FileSystemData{Directory: true, Link: "/filesystem" + parentDir, Name: parentDir})
 	return items
 }
