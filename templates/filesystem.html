@@ -9,11 +9,11 @@
               <li><img src="/static/img/back.gif" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
             {{else}}
               {{if .Directory}}
-                  <li><img src="/static/img/folder.gif" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
-                {{else}}
-                  <li><img src="/static/img/text.gif" alt="[   ]"><a href="{{ .Link }}">{{ .Name }}</a></li>
-                {{end}}
+                <li><img src="/static/img/{{.Img}}" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
+              {{else}}
+                <li><img src="/static/img/{{.Img}}" alt="[DIR]"><a href="{{ .Link }}" target="_blank">{{ .Name }}</a></li>
               {{ end }}
+            {{ end }}
             {{ end }}
           </ul>
       </div>

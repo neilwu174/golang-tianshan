@@ -32,6 +32,23 @@ var (
 	templates map[string]*template.Template
 )
 
+type route struct {
+	method  string
+	regex   *regexp.Regexp
+	handler http.HandlerFunc
+}
+
+var routes = []route{
+	newRoute("GET", "/", home),
+	newRoute("GET", "/xyz/(.*)", sink),
+	newRoute("GET", "/groups/([^/]+)/people", peopleInGroupHandler),
+	newRoute("GET", "/filesystem/(.*)", FileSystem),
+	newRoute("GET", "/filesystem", FileSystem),
+	newRoute("GET", "/home", Index),
+	newRoute("GET", "/explorer", Explorer),
+	newRoute("GET", "/explorer/env", Env),
+}
+
 func LoadTemplates() error {
 	if templates == nil {
 		templates = make(map[string]*template.Template)
@@ -94,17 +111,6 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 301)
 }
 
-var routes = []route{
-	newRoute("GET", "/", home),
-	newRoute("GET", "/xyz/(.*)", sink),
-	newRoute("GET", "/groups/([^/]+)/people", peopleInGroupHandler),
-	newRoute("GET", "/filesystem/(.*)", FileSystem),
-	newRoute("GET", "/filesystem", FileSystem),
-	newRoute("GET", "/home", Index),
-	newRoute("GET", "/explorer", Explorer),
-	newRoute("GET", "/explorer/env", Env),
-}
-
 func getRouts() []route {
 	dir := http.Dir("./")
 	fs := http.FileServer(dir)
@@ -116,24 +122,16 @@ func newRoute(method, pattern string, handler http.HandlerFunc) route {
 	return route{method, regexp.MustCompile("^" + pattern + "$"), handler}
 }
 
-type route struct {
-	method  string
-	regex   *regexp.Regexp
-	handler http.HandlerFunc
-}
-
 func Serve(w http.ResponseWriter, r *http.Request) {
 	var allow []string
 	for _, route := range getRouts() {
 		matches := route.regex.FindStringSubmatch(r.URL.Path)
-		fmt.Println("matches=", matches)
 		if len(matches) > 0 {
 			if r.Method != route.method {
 				allow = append(allow, route.method)
 				continue
 			}
 			ctx := context.WithValue(r.Context(), ctxKey{}, matches[1:])
-			fmt.Println("route=", route.handler)
 			route.handler(w, r.WithContext(ctx))
 			return
 		}

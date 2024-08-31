@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -13,6 +14,7 @@ type FileSystemData struct {
 	Parent    bool
 	Link      string
 	Name      string
+	Img       string
 }
 
 func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Request) {
@@ -24,8 +26,24 @@ func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Re
 		}
 	} else {
 		path := r.URL.Path[len("/filesystem"):len(r.URL.Path)]
-		if err := tmplate.Execute(w, getDirectory(path)); err != nil {
-			log.Println(err)
+		status, err := os.Stat(path)
+		if err != nil {
+			panic(err)
+		}
+		if status.IsDir() {
+			log.Println(path, " is a Dir")
+			if err := tmplate.Execute(w, getDirectory(path)); err != nil {
+				log.Println(err)
+			}
+		} else {
+			log.Println(path, " is a File")
+			fileBytes, err := os.ReadFile(path)
+			if err != nil {
+				panic(err)
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Write(fileBytes)
 		}
 	}
 }
@@ -33,15 +51,6 @@ func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Re
 func getDirectory(directory string) []FileSystemData {
 	var parentDir = filepath.Dir(directory)
 	log.Println("parentDir=", parentDir)
-	status, err := os.Stat(directory)
-	if err != nil {
-		panic(err)
-	}
-	if status.IsDir() {
-		log.Println(directory, " is a Dir")
-	} else {
-		log.Println(directory, " is a File")
-	}
 	entries, err := os.ReadDir(directory)
 	if err != nil {
 		log.Fatal(err)
@@ -51,10 +60,23 @@ func getDirectory(directory string) []FileSystemData {
 	for i, s := range entries {
 		log.Println("entry=", i, s.Name())
 		items[i+1].Directory = s.IsDir()
-		// items[i].Name = "/filesystem" + directory + "/" + s.Name()
 		items[i+1].Link = "/filesystem" + directory + "/" + s.Name()
 		items[i+1].Name = s.Name()
 		items[i+1].Parent = false
+		if s.IsDir() {
+			items[i+1].Img = "folder.gif"
+		} else {
+			if filepath.Ext(s.Name()) == ".pdf" {
+				items[i+1].Img = "pdf.gif"
+			} else if filepath.Ext(s.Name()) == ".zip" {
+				items[i+1].Img = "compressed.gif"
+			} else if filepath.Ext(s.Name()) == ".mp4" {
+				items[i+1].Img = "movie.gif"
+			} else {
+				items[i+1].Img = "text.gif"
+			}
+		}
+		fmt.Printf("%+v\n", items[i+1])
 	}
 	// items = append(items, FileSystemData{Directory: true, Link: "/filesystem" + parentDir, Name: parentDir})
 	return items
