@@ -31,9 +31,9 @@
                   ---
                 {{else}}
                   {{if .Directory}}
-                  <a href="/fileOperations/deleteFolder?name={{.Name}}&parent={{.ParentDir}}">Delete</a>
+                  <a href="/fileOperations/deleteModal?name={{.Name}}&parent={{.ParentDir}}&type=folder">Delete</a>
                   {{else}}
-                  <a href="/fileOperations/deleteFile?name={{.Name}}&parent={{.ParentDir}}">Delete</a>
+                  <a href="/fileOperations/deleteFile?name={{.Name}}&parent={{.ParentDir}}&type=file">Delete</a>
                   {{ end }}
                 {{ end }}
               </div>

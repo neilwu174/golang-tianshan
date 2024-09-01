@@ -20,6 +20,12 @@ type FileSystemData struct {
 	LastModified time.Time
 }
 
+type FileInfo struct {
+	Directory bool
+	Name      string
+	ParentDir string
+}
+
 func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Request) {
 	log.Println("GetFileSystem-checking", r.URL.Path)
 	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
@@ -48,6 +54,21 @@ func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Re
 			w.Header().Set("Content-Type", "application/octet-stream")
 			w.Write(fileBytes)
 		}
+	}
+}
+
+func GetDeleteModal(tmplate *template.Template, w http.ResponseWriter, r *http.Request) {
+	log.Println("GetDeleteModal-checking", r.URL.Path)
+	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	var deleteType = getQueryParam(r, "type")
+	var fileInfo FileInfo
+	if deleteType == "file" {
+		fileInfo = FileInfo{Directory: false, Name: getQueryParam(r, "name"), ParentDir: getQueryParam(r, "parent")}
+	} else {
+		fileInfo = FileInfo{Directory: true, Name: getQueryParam(r, "name"), ParentDir: getQueryParam(r, "parent")}
+	}
+	if err := tmplate.Execute(w, fileInfo); err != nil {
+		log.Println(err)
 	}
 }
 
@@ -106,4 +127,14 @@ func setFileInfo(name string, file *FileSystemData) {
 	// Gives the size of the file in bytes
 	file.Size = fileInfo.Size()
 	// fmt.Println("Size of the file:", file.Size)
+}
+
+func DeleteFiles(w http.ResponseWriter, r *http.Request) {
+	log.Println("DeleteFiles...")
+}
+func DeleteFolders(w http.ResponseWriter, r *http.Request) {
+	log.Println("DeleteFolders...")
+}
+func getQueryParam(r *http.Request, key string) string {
+	return r.URL.Query().Get(key)
 }

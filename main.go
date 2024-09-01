@@ -17,14 +17,15 @@ import (
 )
 
 const (
-	layoutsDir      = "templates/layouts"
-	templatesDir    = "templates"
-	extension       = "/*.html"
-	index           = "index.html"
-	user            = "user.html"
-	html_explorer   = "explorer.html"
-	html_env        = "env.html"
-	html_filesystem = "filesystem.html"
+	layoutsDir        = "templates/layouts"
+	templatesDir      = "templates"
+	extension         = "/*.html"
+	index             = "index.html"
+	user              = "user.html"
+	html_explorer     = "explorer.html"
+	html_env          = "env.html"
+	html_filesystem   = "filesystem.html"
+	html_modal_delete = "modal_delete.html"
 )
 
 var (
@@ -48,8 +49,11 @@ var routes = []route{
 	newRoute("GET", "/home", Index),
 	newRoute("GET", "/explorer", Explorer),
 	newRoute("GET", "/explorer/env", Env),
-	newRoute("GET", "/fileOperations/deleteFile", DeleteFile),
-	newRoute("GET", "/fileOperations/deleteFolder", DeleteFolder),
+	newRoute("GET", "/fileOperations/deleteFile", deleteFile),
+	newRoute("GET", "/fileOperations/deleteFolder", deleteFolder),
+	newRoute("GET", "/fileOperations/cancelFile", cancelFile),
+	newRoute("GET", "/fileOperations/cancelFolder", cancelFolder),
+	newRoute("GET", "/fileOperations/deleteModal", deleteModal),
 }
 
 func LoadTemplates() error {
@@ -108,17 +112,25 @@ func FileSystem(w http.ResponseWriter, r *http.Request) {
 	log.Println("loading filesystem")
 	handler.GetFileSystem(getTemplate(html_filesystem), w, r)
 }
-func DeleteFile(w http.ResponseWriter, r *http.Request) {
-	log.Println("DeleteFile...")
-	log.Println("DeleteFile...", getQueryParam(r, "name"))
-	log.Println("DeleteFile...", getQueryParam(r, "parent"))
-	handler.GetEnv(getTemplate(html_env), w, r)
+func deleteModal(w http.ResponseWriter, r *http.Request) {
+	log.Println("DeleteModal...")
+	handler.GetDeleteModal(getTemplate(html_modal_delete), w, r)
 }
-func DeleteFolder(w http.ResponseWriter, r *http.Request) {
-	log.Println("DeleteFolder...")
-	log.Println("DeleteFile...", getQueryParam(r, "name"))
-	log.Println("DeleteFile...", getQueryParam(r, "parent"))
-	handler.GetEnv(getTemplate(html_env), w, r)
+func deleteFile(w http.ResponseWriter, r *http.Request) {
+	log.Println("deleteFile...")
+	http.Redirect(w, r, "/filesystem"+getQueryParam(r, "parentDir"), http.StatusSeeOther)
+}
+func deleteFolder(w http.ResponseWriter, r *http.Request) {
+	log.Println("deleteFolder...")
+	http.Redirect(w, r, "/filesystem"+getQueryParam(r, "parentDir"), http.StatusSeeOther)
+}
+func cancelFile(w http.ResponseWriter, r *http.Request) {
+	log.Println("CancelFile...")
+	http.Redirect(w, r, "/filesystem"+getQueryParam(r, "parentDir"), http.StatusSeeOther)
+}
+func cancelFolder(w http.ResponseWriter, r *http.Request) {
+	log.Println("CancelFolder...")
+	http.Redirect(w, r, "/filesystem"+getQueryParam(r, "parentDir"), http.StatusSeeOther)
 }
 func getQueryParam(r *http.Request, key string) string {
 	return r.URL.Query().Get(key)

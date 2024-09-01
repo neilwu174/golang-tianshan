@@ -1,0 +1,21 @@
+{{template "main" .}}
+{{define "content"}}
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>File System Explorer</h2>
+      <p>Choose Continue to delete a File or Folder,Cancel to return to its parent folder</p>
+      <p>
+      {{if .Directory}}
+      <a class="btn btn-secondary" href="/fileOperations/deleteFolder?name={{.Name}}&parent={{.ParentDir}}">Continue</a>
+      <a class="btn btn-secondary" href="/fileOperations/cancelFolder?name={{.Name}}&parent={{.ParentDir}}">Cancel</a>
+      {{else}}
+      <a class="btn btn-secondary" href="/fileOperations/deleteFile?name={{.Name}}&parent={{.ParentDir}}">Continue</a>
+      <a class="btn btn-secondary" href="/fileOperations/cancelFile?name={{.Name}}&parent={{.ParentDir}}">Cancel</a>
+      {{ end }}
+    </p>
+  </div>
+  </div>
+</div>
+{{end}}
