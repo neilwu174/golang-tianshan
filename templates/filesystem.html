@@ -1,23 +1,58 @@
 {{template "main" .}}
 {{define "content"}}
 <div class="container-fluid">
-    <div class="row">
-      <div class="col-sm-12">
-            <ul>
+  <div class="row">
             {{ range . }}
-            {{if .Parent}}
-              <li><img src="/static/img/back.gif" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
-            {{else}}
-              {{if .Directory}}
-                <li><img src="/static/img/{{.Img}}" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a></li>
-              {{else}}
-                <li><img src="/static/img/{{.Img}}" alt="[DIR]"><a href="{{ .Link }}" target="_blank">{{ .Name }}</a></li>
-              {{ end }}
+            <div class="row">
+              <div class="col-sm-6">
+                    {{if .Parent}}
+                      <img src="/static/img/back.gif" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a>
+                    {{else}}
+                      {{if .Directory}}
+                        <img src="/static/img/{{.Img}}" alt="[DIR]"><a href="{{ .Link }}">{{ .Name }}</a>
+                      {{else}}
+                        <img src="/static/img/{{.Img}}" alt="[DIR]"><a href="{{ .Link }}" target="_blank">{{ .Name }}</a>
+                      {{ end }}
+                    {{ end }}
+              </div>
+              <div class="col-sm-1">
+                {{if .Parent}}
+                  ---
+                {{else}}
+                  {{if .Directory}}
+                     --
+                  {{else}}
+                    {{ .Size }}
+                  {{ end }}
+                {{ end }}
+              </div>
+              <div class="col-sm-1">
+                {{if .Parent}}
+                  ---
+                {{else}}
+                  {{if .Directory}}
+                  <a href="/fileOperations/deleteFolder?name={{.Name}}&parent={{.ParentDir}}">Delete</a>
+                  {{else}}
+                  <a href="/fileOperations/deleteFile?name={{.Name}}&parent={{.ParentDir}}">Delete</a>
+                  {{ end }}
+                {{ end }}
+              </div>
+              <div class="col-sm-4">
+                {{if .Parent}}
+                  ---
+                {{else}}
+                  {{if .Directory}}
+                     --
+                  {{else}}
+                    {{ .LastModified }}
+                  {{ end }}
+                {{ end }}
+              </div>
+            </div>
             {{ end }}
-            {{ end }}
-          </ul>
       </div>
     </div>
   </div>
 </div>
+
 {{end}}

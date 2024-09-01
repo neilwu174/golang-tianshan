@@ -1,20 +1,23 @@
 package handler
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type FileSystemData struct {
-	Directory bool
-	Parent    bool
-	Link      string
-	Name      string
-	Img       string
+	Directory    bool
+	Parent       bool
+	Link         string
+	Name         string
+	ParentDir    string
+	Img          string
+	Size         int64
+	LastModified time.Time
 }
 
 func GetFileSystem(tmplate *template.Template, w http.ResponseWriter, r *http.Request) {
@@ -58,11 +61,13 @@ func getDirectory(directory string) []FileSystemData {
 	items := make([]FileSystemData, len(entries)+1)
 	items[0] = FileSystemData{Directory: true, Parent: true, Link: "/filesystem" + parentDir, Name: parentDir}
 	for i, s := range entries {
-		log.Println("entry=", i, s.Name())
+		// log.Println("entry=", i, s.Name())
 		items[i+1].Directory = s.IsDir()
 		items[i+1].Link = "/filesystem" + directory + "/" + s.Name()
 		items[i+1].Name = s.Name()
 		items[i+1].Parent = false
+		items[i+1].ParentDir = directory
+
 		if s.IsDir() {
 			items[i+1].Img = "folder.gif"
 		} else {
@@ -75,9 +80,30 @@ func getDirectory(directory string) []FileSystemData {
 			} else {
 				items[i+1].Img = "text.gif"
 			}
+			setFileInfo(directory+"/"+s.Name(), &items[i+1])
 		}
-		fmt.Printf("%+v\n", items[i+1])
+		// fmt.Printf("%+v\n", items[i+1])
 	}
 	// items = append(items, FileSystemData{Directory: true, Link: "/filesystem" + parentDir, Name: parentDir})
 	return items
+}
+func setFileInfo(name string, file *FileSystemData) {
+
+	// Get the fileinfo
+	fileInfo, err := os.Stat(name)
+
+	// Checks for the error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Gives the modification time
+	file.LastModified = fileInfo.ModTime()
+	// fmt.Println("Name of the file:", fileInfo.Name(),
+	// 	" Last modified time of the file:",
+	// 	file.LastModified)
+
+	// Gives the size of the file in bytes
+	file.Size = fileInfo.Size()
+	// fmt.Println("Size of the file:", file.Size)
 }

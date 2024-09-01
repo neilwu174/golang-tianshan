@@ -11,6 +11,7 @@ import (
 
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -47,6 +48,8 @@ var routes = []route{
 	newRoute("GET", "/home", Index),
 	newRoute("GET", "/explorer", Explorer),
 	newRoute("GET", "/explorer/env", Env),
+	newRoute("GET", "/fileOperations/deleteFile", DeleteFile),
+	newRoute("GET", "/fileOperations/deleteFolder", DeleteFolder),
 }
 
 func LoadTemplates() error {
@@ -104,6 +107,21 @@ func Env(w http.ResponseWriter, r *http.Request) {
 func FileSystem(w http.ResponseWriter, r *http.Request) {
 	log.Println("loading filesystem")
 	handler.GetFileSystem(getTemplate(html_filesystem), w, r)
+}
+func DeleteFile(w http.ResponseWriter, r *http.Request) {
+	log.Println("DeleteFile...")
+	log.Println("DeleteFile...", getQueryParam(r, "name"))
+	log.Println("DeleteFile...", getQueryParam(r, "parent"))
+	handler.GetEnv(getTemplate(html_env), w, r)
+}
+func DeleteFolder(w http.ResponseWriter, r *http.Request) {
+	log.Println("DeleteFolder...")
+	log.Println("DeleteFile...", getQueryParam(r, "name"))
+	log.Println("DeleteFile...", getQueryParam(r, "parent"))
+	handler.GetEnv(getTemplate(html_env), w, r)
+}
+func getQueryParam(r *http.Request, key string) string {
+	return r.URL.Query().Get(key)
 }
 
 func redirect(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +187,17 @@ func sink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Sink %s\n", slug)
 }
 
+func GetFileSize1(filepath string) (int64, error) {
+	fi, err := os.Stat(filepath)
+	if err != nil {
+		return 0, err
+	}
+	// get the size
+	return fi.Size(), nil
+}
 func main() {
 	LoadTemplates()
 	http.ListenAndServe("127.0.0.1:8080", http.HandlerFunc(Serve))
+	// size, _ := GetFileSize1("/Users/xiaoliwu/workspace/deepfake/DeepFaceLab_MacOS/LICENSE")
+	// log.Println("File size=", size)
 }
