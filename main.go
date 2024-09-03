@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/neilwu174/calculator/internal/handler"
@@ -49,8 +50,8 @@ var routes = []route{
 	newRoute("GET", "/home", Index),
 	newRoute("GET", "/explorer", Explorer),
 	newRoute("GET", "/explorer/env", Env),
-	newRoute("GET", "/fileOperations/deleteFile", deleteFile),
-	newRoute("GET", "/fileOperations/deleteFolder", deleteFolder),
+	newRoute("GET", "/fileOperations/deleteFile", handler.DeleteFiles),
+	newRoute("GET", "/fileOperations/deleteFolder", handler.DeleteFolders),
 	newRoute("GET", "/fileOperations/cancelFile", cancelFile),
 	newRoute("GET", "/fileOperations/cancelFolder", cancelFolder),
 	newRoute("GET", "/fileOperations/deleteModal", deleteModal),
@@ -115,14 +116,6 @@ func FileSystem(w http.ResponseWriter, r *http.Request) {
 func deleteModal(w http.ResponseWriter, r *http.Request) {
 	log.Println("DeleteModal...")
 	handler.GetDeleteModal(getTemplate(html_modal_delete), w, r)
-}
-func deleteFile(w http.ResponseWriter, r *http.Request) {
-	log.Println("deleteFile...")
-	http.Redirect(w, r, "/filesystem"+getQueryParam(r, "parentDir"), http.StatusSeeOther)
-}
-func deleteFolder(w http.ResponseWriter, r *http.Request) {
-	log.Println("deleteFolder...")
-	http.Redirect(w, r, "/filesystem"+getQueryParam(r, "parentDir"), http.StatusSeeOther)
 }
 func cancelFile(w http.ResponseWriter, r *http.Request) {
 	log.Println("CancelFile...")
@@ -208,8 +201,19 @@ func GetFileSize1(filepath string) (int64, error) {
 	return fi.Size(), nil
 }
 func main() {
+	test()
 	LoadTemplates()
 	http.ListenAndServe("127.0.0.1:8080", http.HandlerFunc(Serve))
 	// size, _ := GetFileSize1("/Users/xiaoliwu/workspace/deepfake/DeepFaceLab_MacOS/LICENSE")
 	// log.Println("File size=", size)
+}
+func test() {
+	addr, _ := net.InterfaceAddrs()
+	for _, a := range addr {
+		log.Println(a.String())
+	}
+	interfaces, _ := net.Interfaces()
+	for b := range interfaces {
+		log.Println(b)
+	}
 }

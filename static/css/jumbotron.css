@@ -2,3 +2,7 @@
 body {
     padding-top: 3.5rem;
   }
+.footer {
+    display: inline-block;
+    margin-top: 20%;
+}  

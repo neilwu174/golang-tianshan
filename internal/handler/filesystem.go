@@ -130,10 +130,25 @@ func setFileInfo(name string, file *FileSystemData) {
 }
 
 func DeleteFiles(w http.ResponseWriter, r *http.Request) {
-	log.Println("DeleteFiles...")
+	var name = getQueryParam(r, "name")
+	var parent = getQueryParam(r, "parent")
+	log.Println("DeleteFiles...", name, parent)
+	err := os.Remove(parent + "/" + name)
+	if err != nil {
+		log.Println(err)
+	}
+	http.Redirect(w, r, "/filesystem"+parent, http.StatusSeeOther)
 }
+
 func DeleteFolders(w http.ResponseWriter, r *http.Request) {
-	log.Println("DeleteFolders...")
+	var name = getQueryParam(r, "name")
+	var parent = getQueryParam(r, "parent")
+	log.Println("DeleteFiles...", name, parent)
+	err := os.RemoveAll(parent + "/" + name)
+	if err != nil {
+		log.Println(err)
+	}
+	http.Redirect(w, r, "/filesystem"+parent, http.StatusSeeOther)
 }
 func getQueryParam(r *http.Request, key string) string {
 	return r.URL.Query().Get(key)

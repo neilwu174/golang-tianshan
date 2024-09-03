@@ -1,7 +1,6 @@
 {{template "main" .}}
 {{define "content"}}
 <div class="container-fluid">
-  <div class="row">
             {{ range . }}
             <div class="row">
               <div class="col-sm-6">
@@ -17,7 +16,7 @@
               </div>
               <div class="col-sm-1">
                 {{if .Parent}}
-                  ---
+                  Size(Byte)
                 {{else}}
                   {{if .Directory}}
                      --
@@ -28,18 +27,18 @@
               </div>
               <div class="col-sm-1">
                 {{if .Parent}}
-                  ---
+                  Action
                 {{else}}
                   {{if .Directory}}
                   <a href="/fileOperations/deleteModal?name={{.Name}}&parent={{.ParentDir}}&type=folder">Delete</a>
                   {{else}}
-                  <a href="/fileOperations/deleteFile?name={{.Name}}&parent={{.ParentDir}}&type=file">Delete</a>
+                  <a href="/fileOperations/deleteModal?name={{.Name}}&parent={{.ParentDir}}&type=file">Delete</a>
                   {{ end }}
                 {{ end }}
               </div>
               <div class="col-sm-4">
                 {{if .Parent}}
-                  ---
+                  Last Modified
                 {{else}}
                   {{if .Directory}}
                      --
@@ -50,9 +49,12 @@
               </div>
             </div>
             {{ end }}
-      </div>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+          </div>
     </div>
-  </div>
 </div>
 
 {{end}}
